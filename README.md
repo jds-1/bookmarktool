@@ -49,10 +49,12 @@ python3 app.py
 ### Environment Variables
 
 - `BOOKMARKS_PATH`: Path to the bookmarks YAML file (default: `./bookmarks.yaml`)
+- `ICONS_PATH`: Path to the icons directory (default: `icons/` folder in same directory as bookmarks file)
 
 Example:
 ```bash
 export BOOKMARKS_PATH=/path/to/your/bookmarks.yaml
+export ICONS_PATH=/path/to/your/icons
 python3 app.py
 ```
 

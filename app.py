@@ -2,12 +2,32 @@
 import yaml
 import os
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, jsonify, url_for, send_from_directory
 
 # Get bookmarks file path from environment variable with default
 BOOKMARKS_FILE = os.environ.get('BOOKMARKS_PATH', './bookmarks.yaml')
 
+# Get icons directory path - either from env var or relative to bookmarks file
+ICONS_DIR = os.environ.get('ICONS_PATH')
+if not ICONS_DIR:
+    # Default to icons folder in same directory as bookmarks file
+    bookmarks_dir = os.path.dirname(os.path.abspath(BOOKMARKS_FILE))
+    ICONS_DIR = os.path.join(bookmarks_dir, 'icons')
+
+# Upload configuration
+UPLOAD_FOLDER = ICONS_DIR
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico'}
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
+def allowed_file(filename):
+    """Check if the file extension is allowed"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def load_bookmarks():
     """Load bookmarks from YAML file"""
@@ -182,7 +202,55 @@ def edit_bookmark():
     
     return jsonify({'success': True})
 
+@app.route('/icons/<filename>')
+def serve_icon(filename):
+    """Serve icon files from the configured icons directory"""
+    return send_from_directory(ICONS_DIR, filename)
+
+@app.route('/upload_icon', methods=['POST'])
+def upload_icon():
+    """Upload an icon file"""
+    if 'icon_file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file selected'})
+    
+    file = request.files['icon_file']
+    
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No file selected'})
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        
+        # Ensure upload directory exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Return the URL path for the uploaded file
+        icon_url = url_for('serve_icon', filename=filename)
+        return jsonify({'success': True, 'icon_url': icon_url, 'filename': filename})
+    
+    return jsonify({'success': False, 'error': 'Invalid file type. Allowed: png, jpg, jpeg, gif, svg, ico'})
+
+@app.route('/list_icons')
+def list_icons():
+    """List all available icon files"""
+    icons_dir = ICONS_DIR
+    if not os.path.exists(icons_dir):
+        return jsonify({'icons': []})
+    
+    icons = []
+    for filename in os.listdir(icons_dir):
+        if allowed_file(filename):
+            icon_url = url_for('serve_icon', filename=filename)
+            icons.append({'filename': filename, 'url': icon_url})
+    
+    return jsonify({'icons': icons})
+
 if __name__ == '__main__':
     print(f"Bookmark Manager starting...")
     print(f"Using bookmarks file: {BOOKMARKS_FILE}")
+    print(f"Using icons directory: {ICONS_DIR}")
     app.run(host='0.0.0.0', debug=True, port=5000)
+    #.

@@ -174,8 +174,85 @@
         
         .form-group {
             margin-bottom: 20px;
+        }        
+        .form-group.full-width {
+            grid-column: span 2;
         }
         
+        .icon-section {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f8f9fa;
+            margin-top: 10px;
+        }
+        
+        .icon-upload-area {
+            margin-bottom: 20px;
+        }
+        
+        .icon-upload-area input[type="file"] {
+            display: none;
+        }
+        
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 3px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .upload-label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .upload-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .upload-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        
+        .upload-hint {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .icon-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .icon-url-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .icon-url-group label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .icon-url-group input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }        
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -208,11 +285,48 @@
             cursor: pointer;
             transition: transform 0.3s ease;
             grid-column: span 2;
+            width: 100%;
+        }
+        
+        .btn-icon-picker {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-icon-picker:hover {
+            background: #5a67d8;
         }
         
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .upload-status {
+            margin-top: 5px;
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .upload-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .upload-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
         
         .modal {
@@ -236,6 +350,72 @@
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+        }
+        
+        #iconPickerModal .modal-content {
+            max-width: 700px;
+        }
+        
+        .icon-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .icon-input-container input {
+            flex: 1;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .icon-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .icon-item:hover {
+            border-color: #667eea;
+            background: #e7f3ff;
+        }
+        
+        .icon-item.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .icon-item img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        
+        .icon-item .icon-name {
+            font-size: 10px;
+            word-break: break-all;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .no-icons {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
         
         .close {
@@ -265,6 +445,24 @@
         .notification.error {
             background: #f44336;
         }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+            
+            .btn-primary {
+                grid-column: span 1;
+            }
+            
+            .icon-options {
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -290,22 +488,47 @@
                                placeholder="e.g., GitHub, LinkedIn">
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label for="href">URL *</label>
                         <input type="url" id="href" name="href" required 
                                placeholder="https://example.com">
                     </div>
                     
-                    <div class="form-group">
-                        <label for="icon">Icon URL (optional)</label>
-                        <input type="text" id="icon" name="icon" 
-                               placeholder="/icons/icon.png">
+                    <!-- Icon Section -->
+                    <div class="form-group full-width">
+                        <label>Bookmark Icon</label>
+                        <div class="icon-section">
+                            <div class="icon-upload-area">
+                                <input type="file" id="icon_file" name="icon_file" 
+                                       accept="image/*" onchange="handleIconUpload(this)">
+                                <label for="icon_file" class="upload-label">
+                                    <span class="upload-icon">📁</span>
+                                    <span class="upload-text">Upload Icon</span>
+                                    <span class="upload-hint">PNG, JPG, SVG, ICO</span>
+                                </label>
+                            </div>
+                            
+                            <div class="icon-options">
+                                <button type="button" class="btn-icon-picker" onclick="openIconPicker()">
+                                    🎨 Browse Uploaded Icons
+                                </button>
+                                
+                                <div class="icon-url-group">
+                                    <label for="icon">Or enter icon URL:</label>
+                                    <input type="text" id="icon" name="icon" 
+                                           placeholder="https://example.com/icon.png or /icons/icon.png">
+                                </div>
+                            </div>
+                            
+                            <div id="upload-status" class="upload-status"></div>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="abbr">Abbreviation (optional)</label>
                         <input type="text" id="abbr" name="abbr" 
                                placeholder="GH, LI, etc." maxlength="4">
+                        <small>Used when no icon is provided</small>
                     </div>
                     
                     <button type="submit" class="btn-primary">Add Bookmark</button>
@@ -377,7 +600,12 @@
                 
                 <div class="form-group">
                     <label for="editIcon">Icon URL (optional)</label>
-                    <input type="text" id="editIcon" name="icon">
+                    <div class="icon-input-container">
+                        <input type="text" id="editIcon" name="icon">
+                        <button type="button" class="btn-icon-picker" onclick="openIconPicker('editIcon')">
+                            📁 Browse Icons
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -390,10 +618,117 @@
         </div>
     </div>
     
+    <!-- Icon Picker Modal -->
+    <div id="iconPickerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeIconPicker()">&times;</span>
+            <h2>Choose an Icon</h2>
+            <div id="iconGrid" class="icon-grid">
+                <div class="loading">Loading icons...</div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Notification -->
     <div id="notification" class="notification"></div>
     
     <script>
+        // Handle icon file upload
+        async function handleIconUpload(input) {
+            const file = input.files[0];
+            const statusDiv = document.getElementById('upload-status');
+            
+            if (!file) {
+                statusDiv.textContent = '';
+                statusDiv.className = 'upload-status';
+                return;
+            }
+            
+            // Check file size (16MB limit)
+            if (file.size > 16 * 1024 * 1024) {
+                statusDiv.textContent = 'File too large. Maximum size is 16MB.';
+                statusDiv.className = 'upload-status error';
+                input.value = '';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('icon_file', file);
+            
+            statusDiv.textContent = 'Uploading...';
+            statusDiv.className = 'upload-status';
+            
+            try {
+                const response = await fetch('/upload_icon', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusDiv.textContent = `✓ Uploaded: ${data.filename}`;
+                    statusDiv.className = 'upload-status success';
+                    
+                    // Auto-fill the icon URL field
+                    document.getElementById('icon').value = data.icon_url;
+                } else {
+                    statusDiv.textContent = `Error: ${data.error}`;
+                    statusDiv.className = 'upload-status error';
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Upload failed';
+                statusDiv.className = 'upload-status error';
+            }
+        }
+        
+        // Icon Picker functionality
+        let currentTargetInput = 'icon';
+        
+        async function openIconPicker(targetInputId = 'icon') {
+            currentTargetInput = targetInputId;
+            const modal = document.getElementById('iconPickerModal');
+            const iconGrid = document.getElementById('iconGrid');
+            
+            modal.style.display = 'flex';
+            iconGrid.innerHTML = '<div class="loading">Loading icons...</div>';
+            
+            try {
+                const response = await fetch('/list_icons');
+                const data = await response.json();
+                
+                if (data.icons && data.icons.length > 0) {
+                    iconGrid.innerHTML = data.icons.map(icon => `
+                        <div class="icon-item" onclick="selectIcon('${icon.url}')">
+                            <img src="${icon.url}" alt="${icon.filename}" onerror="this.style.display='none'">
+                            <div class="icon-name">${icon.filename}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    iconGrid.innerHTML = '<div class="no-icons">No icons found. Upload some icons first!</div>';
+                }
+            } catch (error) {
+                iconGrid.innerHTML = '<div class="no-icons">Error loading icons</div>';
+            }
+        }
+        
+        function selectIcon(iconUrl) {
+            document.getElementById(currentTargetInput).value = iconUrl;
+            closeIconPicker();
+            showNotification('Icon selected!');
+        }
+        
+        function closeIconPicker() {
+            document.getElementById('iconPickerModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('iconPickerModal').addEventListener('click', (e) => {
+            if (e.target.id === 'iconPickerModal') {
+                closeIconPicker();
+            }
+        });
+        
         // Add bookmark form submission
         document.getElementById('addBookmarkForm').addEventListener('submit', async (e) => {
             e.preventDefault();
