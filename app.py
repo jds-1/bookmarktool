@@ -15,6 +15,29 @@ if not ICONS_DIR:
     bookmarks_dir = os.path.dirname(os.path.abspath(BOOKMARKS_FILE))
     ICONS_DIR = os.path.join(bookmarks_dir, 'icons')
 
+def save_bookmarks(bookmarks):
+    """Save bookmarks to YAML file in Homepage format"""
+    global BOOKMARKS_FILE
+    
+    # Convert dictionary format back to Homepage nested list format
+    homepage_format = []
+    
+    for category_name, bookmarks_dict in bookmarks.items():
+        if bookmarks_dict:  # Only add categories that have bookmarks
+            category_bookmarks = []
+            for bookmark_name, properties in bookmarks_dict.items():
+                # Create the nested list structure expected by Homepage
+                bookmark_entry = {bookmark_name: [properties]}
+                category_bookmarks.append(bookmark_entry)
+            
+            # Add the category with its bookmarks to the main list
+            category_entry = {category_name: category_bookmarks}
+            homepage_format.append(category_entry)
+    
+    # Write to file
+    with open(BOOKMARKS_FILE, 'w') as file:
+        yaml.dump(homepage_format, file, default_flow_style=False, sort_keys=False)
+
 # Flask configuration from environment
 FLASK_HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
 FLASK_PORT = int(os.environ.get('FLASK_PORT', 5000))
@@ -219,6 +242,72 @@ def list_icons():
             icons.append({'filename': filename, 'url': icon_url})
     
     return jsonify({'icons': icons})
+
+@app.route('/')
+def index():
+    """Main page showing all bookmarks"""
+    bookmarks = load_bookmarks()
+    return render_template('index.html', bookmarks=bookmarks)
+
+@app.route('/add', methods=['POST'])
+def add_bookmark():
+    """Add a new bookmark"""
+    bookmarks = load_bookmarks()
+    
+    category = request.form.get('category')
+    name = request.form.get('name')
+    href = request.form.get('href')
+    icon = request.form.get('icon')
+    abbr = request.form.get('abbr')
+    
+    if not category or not name or not href:
+        return jsonify({'success': False, 'error': 'Category, name, and URL are required'})
+    
+    # Create category if it doesn't exist
+    if category not in bookmarks:
+        bookmarks[category] = {}
+    
+    # Check if bookmark already exists
+    if name in bookmarks[category]:
+        return jsonify({'success': False, 'error': f'Bookmark "{name}" already exists in category "{category}"'})
+    
+    # Create bookmark data
+    bookmark_data = {'href': href}
+    if icon:
+        bookmark_data['icon'] = icon
+    if abbr:
+        bookmark_data['abbr'] = abbr
+    
+    bookmarks[category][name] = bookmark_data
+    save_bookmarks(bookmarks)
+    
+    return jsonify({'success': True})
+
+@app.route('/delete', methods=['POST'])
+def delete_bookmark():
+    """Delete a bookmark"""
+    bookmarks = load_bookmarks()
+    
+    category = request.form.get('category')
+    name = request.form.get('name')
+    
+    if not category or not name:
+        return jsonify({'success': False, 'error': 'Category and name are required'})
+    
+    # Check if bookmark exists
+    if category not in bookmarks or name not in bookmarks[category]:
+        return jsonify({'success': False, 'error': 'Bookmark not found'})
+    
+    # Remove bookmark
+    del bookmarks[category][name]
+    
+    # Remove category if empty
+    if not bookmarks[category]:
+        del bookmarks[category]
+    
+    save_bookmarks(bookmarks)
+    
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     print(f"Bookmark Manager starting...")
