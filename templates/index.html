@@ -274,6 +274,27 @@
             border-color: #667eea;
         }
         
+        .category-input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .category-input-container select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .category-input-container select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -478,8 +499,17 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="category">Category *</label>
-                        <input type="text" id="category" name="category" required 
-                               placeholder="e.g., Social, Developer">
+                        <div class="category-input-container">
+                            <select id="categorySelect" onchange="handleCategorySelect()">
+                                <option value="">Select existing category...</option>
+                                {% for category in bookmarks.keys() %}
+                                <option value="{{ category }}">{{ category }}</option>
+                                {% endfor %}
+                                <option value="__new__">+ Create new category</option>
+                            </select>
+                            <input type="text" id="category" name="category" required 
+                                   placeholder="e.g., Social, Developer" style="display:none;">
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -585,7 +615,13 @@
                 
                 <div class="form-group">
                     <label for="editCategory">Category *</label>
-                    <input type="text" id="editCategory" name="new_category" required>
+                    <input type="text" id="editCategory" name="new_category" required 
+                           list="editCategories">
+                    <datalist id="editCategories">
+                        {% for category in bookmarks.keys() %}
+                        <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </datalist>
                 </div>
                 
                 <div class="form-group">
@@ -633,6 +669,25 @@
     <div id="notification" class="notification"></div>
     
     <script>
+        // Handle category selection
+        function handleCategorySelect() {
+            const select = document.getElementById('categorySelect');
+            const input = document.getElementById('category');
+            
+            if (select.value === '__new__') {
+                // Show input for new category
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                input.value = '';
+            } else if (select.value !== '') {
+                // Use selected existing category
+                input.value = select.value;
+            } else {
+                input.value = '';
+            }
+        }
+        
         // Handle icon file upload
         async function handleIconUpload(input) {
             const file = input.files[0];
