@@ -15,6 +15,161 @@ if not ICONS_DIR:
     bookmarks_dir = os.path.dirname(os.path.abspath(BOOKMARKS_FILE))
     ICONS_DIR = os.path.join(bookmarks_dir, 'icons')
 
+def validate_homepage_format(filename, parsed_content, raw_content):
+    """
+    Validate Homepage-specific YAML format for each config file type
+    Returns error message if invalid, None if valid
+    """
+    if not parsed_content:
+        return "Empty configuration file"
+    
+    if filename == 'bookmarks.yaml':
+        return validate_bookmarks_format(parsed_content)
+    elif filename == 'services.yaml':
+        return validate_services_format(parsed_content)
+    elif filename == 'settings.yaml':
+        return validate_settings_format(parsed_content)
+    elif filename == 'widgets.yaml':
+        return validate_widgets_format(parsed_content)
+    
+    return None
+
+def validate_bookmarks_format(data):
+    """Validate Homepage bookmarks format - should be nested lists"""
+    if not isinstance(data, list):
+        return "Bookmarks should be a list of categories"
+    
+    for item in data:
+        if not isinstance(item, dict):
+            return "Each bookmark category should be a dictionary"
+        
+        # Should have exactly one key (the category name)
+        if len(item.keys()) != 1:
+            return "Each category should have exactly one key (category name)"
+        
+        category_name, category_items = next(iter(item.items()))
+        
+        if not isinstance(category_items, list):
+            return f"Category '{category_name}' should contain a list of bookmarks"
+        
+        for bookmark in category_items:
+            if not isinstance(bookmark, dict):
+                return f"Each bookmark in '{category_name}' should be a dictionary"
+            
+            if len(bookmark.keys()) != 1:
+                return f"Each bookmark should have exactly one key (bookmark name)"
+            
+            bookmark_name, bookmark_data = next(iter(bookmark.items()))
+            
+            if not isinstance(bookmark_data, list):
+                return f"Bookmark '{bookmark_name}' should contain a list of properties"
+            
+            # Validate required properties
+            has_href = False
+            for prop in bookmark_data:
+                if not isinstance(prop, dict):
+                    return f"Properties for '{bookmark_name}' should be dictionaries"
+                
+                if 'href' in prop:
+                    has_href = True
+                    if not prop['href'].startswith(('http://', 'https://', '/')):
+                        return f"href in '{bookmark_name}' should be a valid URL"
+            
+            if not has_href:
+                return f"Bookmark '{bookmark_name}' must have an 'href' property"
+    
+    return None
+
+def validate_services_format(data):
+    """Validate Homepage services format - should be nested groups"""
+    if not isinstance(data, list):
+        return "Services should be a list of groups"
+    
+    for item in data:
+        if not isinstance(item, dict):
+            return "Each service group should be a dictionary"
+        
+        # Should have exactly one key (the group name)
+        if len(item.keys()) != 1:
+            return "Each group should have exactly one key (group name)"
+        
+        group_name, group_data = next(iter(item.items()))
+        
+        if not isinstance(group_data, list):
+            return f"Group '{group_name}' should contain a list of services"
+        
+        for service in group_data:
+            if not isinstance(service, dict):
+                return f"Each service in '{group_name}' should be a dictionary"
+            
+            if len(service.keys()) != 1:
+                return f"Each service should have exactly one key (service name)"
+            
+            service_name, service_data = next(iter(service.items()))
+            
+            if not isinstance(service_data, list):
+                return f"Service '{service_name}' should contain a list of properties"
+            
+            # Validate service properties
+            for prop in service_data:
+                if not isinstance(prop, dict):
+                    return f"Properties for service '{service_name}' should be dictionaries"
+                
+                # Check for required properties like href
+                if 'href' in prop and not isinstance(prop['href'], str):
+                    return f"href in service '{service_name}' should be a string"
+    
+    return None
+
+def validate_settings_format(data):
+    """Validate Homepage settings format - should be key-value pairs at root level"""
+    if not isinstance(data, dict):
+        return "Settings should be a dictionary of key-value pairs"
+    
+    # Common Homepage settings validation
+    if 'title' in data and not isinstance(data['title'], str):
+        return "title should be a string"
+    
+    if 'theme' in data and not isinstance(data['theme'], str):
+        return "theme should be a string"
+    
+    if 'color' in data and not isinstance(data['color'], str):
+        return "color should be a string"
+    
+    if 'headerStyle' in data and data['headerStyle'] not in ['boxed', 'underlined', 'clean']:
+        return "headerStyle should be 'boxed', 'underlined', or 'clean'"
+    
+    if 'layout' in data and not isinstance(data['layout'], dict):
+        return "layout should be a dictionary"
+    
+    if 'providers' in data and not isinstance(data['providers'], dict):
+        return "providers should be a dictionary"
+    
+    return None
+
+def validate_widgets_format(data):
+    """Validate Homepage widgets format - should be array of widget objects"""
+    if not isinstance(data, list):
+        return "Widgets should be a list of widget objects"
+    
+    for widget in data:
+        if not isinstance(widget, dict):
+            return "Each widget should be a dictionary"
+        
+        # Each widget should have a 'type' property
+        if 'type' not in widget:
+            return "Each widget must have a 'type' property"
+        
+        widget_type = widget['type']
+        if not isinstance(widget_type, str):
+            return "Widget 'type' should be a string"
+        
+        # Validate common widget properties
+        if 'options' in widget and not isinstance(widget['options'], dict):
+            return f"Widget options for '{widget_type}' should be a dictionary"
+    
+    return None
+
 def save_bookmarks(bookmarks):
     """Save bookmarks to YAML file in Homepage format"""
     global BOOKMARKS_FILE
@@ -224,6 +379,87 @@ def list_icons():
             icons.append({'filename': filename, 'url': icon_url})
     
     return jsonify({'icons': icons})
+
+@app.route('/get_config', methods=['GET'])
+def get_config():
+    """Get the raw config file content for editing"""
+    filename = request.args.get('file', 'bookmarks.yaml')
+    
+    # Security check - only allow specific config files
+    allowed_files = ['bookmarks.yaml', 'services.yaml', 'settings.yaml', 'widgets.yaml']
+    if filename not in allowed_files:
+        return jsonify({'success': False, 'error': 'File not allowed'})
+    
+    # Determine file path based on filename
+    if filename == 'bookmarks.yaml':
+        file_path = BOOKMARKS_FILE
+    else:
+        # Other config files are in the same directory as bookmarks
+        config_dir = os.path.dirname(os.path.abspath(BOOKMARKS_FILE))
+        file_path = os.path.join(config_dir, filename)
+    
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                content = file.read()
+        else:
+            # Return empty content for non-existent files
+            content = f"# {filename}\n# Configuration file for Homepage\n\n"
+        
+        return jsonify({'success': True, 'content': content})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/save_config', methods=['POST'])
+def save_config():
+    """Save the edited config file content after validation"""
+    filename = request.form.get('file')
+    content = request.form.get('content')
+    
+    # Security check - only allow specific config files
+    allowed_files = ['bookmarks.yaml', 'services.yaml', 'settings.yaml', 'widgets.yaml']
+    if filename not in allowed_files:
+        return jsonify({'success': False, 'error': 'File not allowed'})
+    
+    if not content:
+        return jsonify({'success': False, 'error': 'No content provided'})
+    
+    # Determine file path based on filename
+    if filename == 'bookmarks.yaml':
+        file_path = BOOKMARKS_FILE
+    else:
+        # Other config files are in the same directory as bookmarks
+        config_dir = os.path.dirname(os.path.abspath(BOOKMARKS_FILE))
+        file_path = os.path.join(config_dir, filename)
+    
+    try:
+        # Validate YAML syntax
+        parsed_content = yaml.safe_load(content)
+        
+        # Enhanced Homepage-specific validation
+        validation_error = validate_homepage_format(filename, parsed_content, content)
+        if validation_error:
+            return jsonify({'success': False, 'error': f'Homepage format error: {validation_error}'})
+        
+        # Create backup
+        backup_path = file_path + '.backup'
+        if os.path.exists(file_path):
+            import shutil
+            shutil.copy2(file_path, backup_path)
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
+        # Save new content
+        with open(file_path, 'w') as file:
+            file.write(content)
+        
+        return jsonify({'success': True, 'message': f'{filename} saved successfully'})
+    
+    except yaml.YAMLError as e:
+        return jsonify({'success': False, 'error': f'YAML syntax error: {str(e)}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Save error: {str(e)}'})
 
 @app.route('/')
 def index():

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bookmark Manager</title>
+    <title>Homepage Bookmark Manager</title>
     <style>
         * {
             margin: 0;
@@ -467,6 +467,144 @@
             background: #f44336;
         }
         
+        .btn-yaml-editor {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-yaml-editor:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .yaml-editor {
+            width: 100%;
+            height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            resize: vertical;
+        }
+        
+        .yaml-editor:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .yaml-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
+        
+        .btn-validate {
+            background: #17a2b8;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-save {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .yaml-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .yaml-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .yaml-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .footer {
+            background: rgba(255,255,255,0.95);
+            margin-top: 40px;
+            padding: 30px 0;
+            border-top: 2px solid #667eea;
+            backdrop-filter: blur(10px);
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .config-editors h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .editor-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            justify-items: center;
+        }
+        
+        .btn-config-editor {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 180px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-config-editor:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -489,7 +627,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📚 Bookmark Manager</h1>
+            <h1>📚 Homepage Bookmark Manager</h1>
             <p>Manage your bookmarks with ease</p>
         </div>
         
@@ -604,6 +742,29 @@
         </div>
     </div>
     
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="config-editors">
+                <h3>📝 Configuration Files</h3>
+                <div class="editor-buttons">
+                    <button class="btn-config-editor" onclick="openConfigEditor('bookmarks.yaml')">
+                        📚 Edit Bookmarks
+                    </button>
+                    <button class="btn-config-editor" onclick="openConfigEditor('services.yaml')">
+                        🔧 Edit Services
+                    </button>
+                    <button class="btn-config-editor" onclick="openConfigEditor('settings.yaml')">
+                        ⚙️ Edit Settings
+                    </button>
+                    <button class="btn-config-editor" onclick="openConfigEditor('widgets.yaml')">
+                        🧩 Edit Widgets
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -661,6 +822,25 @@
             <h2>Choose an Icon</h2>
             <div id="iconGrid" class="icon-grid">
                 <div class="loading">Loading icons...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Config Editor Modal -->
+    <div id="configEditorModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeConfigEditor()">&times;</span>
+            <h2 id="configEditorTitle">📝 Edit Configuration File</h2>
+            <p id="configEditorDescription">Edit the configuration file directly. Changes will be validated before saving.</p>
+            
+            <textarea id="configEditor" class="yaml-editor" placeholder="Loading file content..."></textarea>
+            
+            <div id="configStatus" class="yaml-status" style="display: none;"></div>
+            
+            <div class="yaml-actions">
+                <button class="btn-validate" onclick="validateConfig()">✓ Validate Syntax</button>
+                <button class="btn-save" onclick="saveConfig()">💾 Save Changes</button>
+                <button class="btn-cancel" onclick="closeConfigEditor()">✕ Cancel</button>
             </div>
         </div>
     </div>
@@ -898,11 +1078,216 @@
             }, 3000);
         }
         
-        // Close modal when clicking outside
+        // Config Editor Functions
+        let currentConfigFile = '';
+        
+        const configFiles = {
+            'bookmarks.yaml': {
+                title: '📚 Edit Bookmarks',
+                description: 'Edit the bookmarks.yaml file that defines your Homepage bookmarks.'
+            },
+            'services.yaml': {
+                title: '🔧 Edit Services', 
+                description: 'Edit the services.yaml file that defines your Homepage services.'
+            },
+            'settings.yaml': {
+                title: '⚙️ Edit Settings',
+                description: 'Edit the settings.yaml file that contains Homepage configuration settings.'
+            },
+            'widgets.yaml': {
+                title: '🧩 Edit Widgets',
+                description: 'Edit the widgets.yaml file that defines your Homepage widgets.'
+            }
+        };
+        
+        async function openConfigEditor(filename) {
+            currentConfigFile = filename;
+            const modal = document.getElementById('configEditorModal');
+            const editor = document.getElementById('configEditor');
+            const status = document.getElementById('configStatus');
+            const title = document.getElementById('configEditorTitle');
+            const description = document.getElementById('configEditorDescription');
+            
+            // Update modal content based on file type
+            const config = configFiles[filename];
+            title.textContent = config.title;
+            description.textContent = config.description;
+            
+            modal.style.display = 'flex';
+            editor.value = 'Loading...';
+            status.style.display = 'none';
+            
+            try {
+                const response = await fetch('/get_config?file=' + encodeURIComponent(filename));
+                const data = await response.json();
+                
+                if (data.success) {
+                    editor.value = data.content;
+                } else {
+                    editor.value = 'Error loading file: ' + data.error;
+                    showConfigStatus('Error loading file: ' + data.error, true);
+                }
+            } catch (error) {
+                editor.value = 'Error loading configuration file';
+                showConfigStatus('Network error loading file', true);
+            }
+        }
+        
+        function closeConfigEditor() {
+            document.getElementById('configEditorModal').style.display = 'none';
+            currentConfigFile = '';
+        }
+        
+        async function validateConfig() {
+            const editor = document.getElementById('configEditor');
+            const content = editor.value;
+            
+            if (!content.trim()) {
+                showConfigStatus('File content is empty', true);
+                return false;
+            }
+            
+            try {
+                // Parse YAML to check basic syntax
+                let parsedContent;
+                try {
+                    // Simple YAML parsing check (client-side)
+                    const lines = content.split('\n');
+                    let hasContent = false;
+                    let hasValidStructure = false;
+                    
+                    for (let line of lines) {
+                        line = line.trim();
+                        if (line && !line.startsWith('#')) {
+                            hasContent = true;
+                            
+                            // File-specific validation based on Homepage syntax
+                            if (currentConfigFile === 'bookmarks.yaml') {
+                                // Bookmarks: Check for nested list format (- Category:)
+                                if (line.match(/^-\s+\w+:$/) || line.match(/^\s+-\s+\w+:$/)) {
+                                    hasValidStructure = true;
+                                }
+                            } else if (currentConfigFile === 'services.yaml') {
+                                // Services: Similar nested format (- Group:)
+                                if (line.match(/^-\s+[\w\s]+:$/) || line.match(/^\s+href:\s*https?:/)) {
+                                    hasValidStructure = true;
+                                }
+                            } else if (currentConfigFile === 'settings.yaml') {
+                                // Settings: Key-value pairs at root level
+                                if (line.match(/^(title|theme|language|layout|background):/)) {
+                                    hasValidStructure = true;
+                                }
+                            } else if (currentConfigFile === 'widgets.yaml') {
+                                // Widgets: Array of widget configurations
+                                if (line.match(/^-\s+(type|resource):/)) {
+                                    hasValidStructure = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!hasContent) {
+                        showConfigStatus('File appears to be empty or only comments', true);
+                        return false;
+                    }
+                    
+                    // Enhanced validation messages based on file type
+                    if (!hasValidStructure) {
+                        let expectedFormat = '';
+                        switch (currentConfigFile) {
+                            case 'bookmarks.yaml':
+                                expectedFormat = 'Expected nested list format like:\n- CategoryName:\n    - BookmarkName:\n        - href: https://example.com';
+                                break;
+                            case 'services.yaml':
+                                expectedFormat = 'Expected nested list format like:\n- GroupName:\n    - ServiceName:\n        href: https://example.com';
+                                break;
+                            case 'settings.yaml':
+                                expectedFormat = 'Expected key-value pairs like:\ntitle: My Homepage\ntheme: dark\nlanguage: en';
+                                break;
+                            case 'widgets.yaml':
+                                expectedFormat = 'Expected widget array like:\n- type: datetime\n- type: resources';
+                                break;
+                        }
+                        showConfigStatus(`⚠️ Warning: File doesn't match expected ${currentConfigFile} format.\n${expectedFormat}`, false);
+                    } else {
+                        showConfigStatus('✓ Valid YAML syntax and Homepage format detected!', false);
+                    }
+                    
+                    return true;
+                    
+                } catch (yamlError) {
+                    showConfigStatus('YAML syntax error: ' + yamlError.message, true);
+                    return false;
+                }
+                
+            } catch (error) {
+                showConfigStatus('Validation error: ' + error.message, true);
+                return false;
+            }
+        }
+        
+        async function saveConfig() {
+            const editor = document.getElementById('configEditor');
+            const content = editor.value;
+            
+            if (!content.trim()) {
+                showConfigStatus('Cannot save empty file content', true);
+                return;
+            }
+            
+            if (!currentConfigFile) {
+                showConfigStatus('No file selected for saving', true);
+                return;
+            }
+            
+            showConfigStatus('Validating and saving...', false);
+            
+            const formData = new FormData();
+            formData.append('file', currentConfigFile);
+            formData.append('content', content);
+            
+            try {
+                const response = await fetch('/save_config', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showConfigStatus('✓ Configuration saved successfully!', false);
+                    showNotification(`${currentConfigFile} updated successfully!`);
+                    setTimeout(() => {
+                        closeConfigEditor();
+                        if (currentConfigFile === 'bookmarks.yaml') {
+                            location.reload();
+                        }
+                    }, 2000);
+                } else {
+                    showConfigStatus('Save failed: ' + data.error, true);
+                }
+            } catch (error) {
+                showConfigStatus('Network error during save', true);
+            }
+        }
+        
+        function showConfigStatus(message, isError) {
+            const status = document.getElementById('configStatus');
+            status.textContent = message;
+            status.className = 'yaml-status ' + (isError ? 'error' : 'success');
+            status.style.display = 'block';
+        }
+        
+        // Close modals when clicking outside
         window.onclick = (event) => {
-            const modal = document.getElementById('editModal');
-            if (event.target === modal) {
+            const editModal = document.getElementById('editModal');
+            const configModal = document.getElementById('configEditorModal');
+            
+            if (event.target === editModal) {
                 closeModal();
+            }
+            if (event.target === configModal) {
+                closeConfigEditor();
             }
         }
     </script>

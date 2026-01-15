@@ -1,17 +1,46 @@
-# Bookmark Manager
+# Homepage Bookmark Manager
 
 A modern, web-based bookmark organizer built with Flask, designed for easier management of bookmarks in [Homepage](https://gethomepage.dev/). This application allows you to manage your bookmarks in categories with a clean, responsive interface and seamlessly integrates with Homepage's bookmark system.
+
+## Screenshots
+
+### Main Interface
+![Main Interface](screenshots/main-interface.png)
+*The main bookmark manager interface showing categorized bookmarks with icons and descriptions*
+
+### Adding Bookmarks
+![Add Bookmark](screenshots/add-bookmark.png)
+*Easy bookmark creation with category selection, icon upload, and URL validation*
+
+### Category Management
+![Categories](screenshots/category-dropdown.png)
+*Smart category dropdown that shows existing categories and allows new ones*
+
+### Icon Management
+![Icon Upload](screenshots/icon-upload.png)
+*Upload and manage bookmark icons with visual preview*
+
+### Configuration Editor
+![Config Editor](screenshots/config-editor.png)
+*Built-in YAML editor for advanced configuration of Homepage files*
+
+### Homepage Integration
+![Homepage Integration](screenshots/homepage-integration.png)
+*Seamless integration with Homepage dashboard showing managed bookmarks*
 
 ## Features
 
 - **Homepage Integration**: Seamlessly works with [Homepage's](https://gethomepage.dev/) bookmark system
+- **Multi-Config Editor**: Edit bookmarks.yaml, services.yaml, settings.yaml, and widgets.yaml files
+- **Homepage Format Validation**: Built-in validation ensures proper Homepage YAML syntax
 - **Organized Categories**: Group bookmarks by category (Developer, Social, Entertainment, Shopping, etc.)
 - **Flexible Display**: Support for both icons and abbreviations for bookmarks
 - **CRUD Operations**: Add, edit, and delete bookmarks through a user-friendly interface
-- **YAML Storage**: Bookmarks are stored in a simple YAML format for easy backup and editing
+- **YAML Storage**: Bookmarks are stored in Homepage-compatible YAML format for easy backup and editing
 - **Icon Management**: Upload, browse, and manage bookmark icons with visual preview
 - **Responsive Design**: Works well on desktop and mobile devices
 - **Environment Configuration**: Configurable bookmark file location via environment variables
+- **Smart Category Dropdown**: Automatically suggests existing categories while allowing new ones
 
 ## Docker Deployment
 
@@ -21,7 +50,7 @@ This repository includes GitHub Actions that automatically build and push Docker
 - Code is pushed to `main` branch
 - New version tags are created (e.g., `v1.0.0`)
 
-Images are available at: `ghcr.io/YOUR_USERNAME/bookmarktool:latest`
+Images are available at: `ghcr.io/jds-1/homepage-bookmark-manager:latest`
 
 ### Prerequisites
 
@@ -32,8 +61,8 @@ Images are available at: `ghcr.io/YOUR_USERNAME/bookmarktool:latest`
 
 1. **Update docker-stack.yml image reference:**
 ```yaml
-# Replace OWNER/REPO with your GitHub username/repository name
-image: ghcr.io/YOUR_USERNAME/bookmarktool:latest
+# Replace with the correct image name
+image: ghcr.io/jds-1/homepage-bookmark-manager:latest
 ```
 
 2. **Create data directory:**
