@@ -18,22 +18,17 @@ COPY app.py .
 COPY templates/ ./templates/
 COPY bookmarks.yaml .
 
-# Create data directory for persistent storage
-RUN mkdir -p /data/icons
+# Create config directory for persistent storage
+RUN mkdir -p /app/config
 
 # Create non-root user for security (Alpine style)
 RUN adduser -D -u 1000 bookmarkuser && \
-    chown -R bookmarkuser:bookmarkuser /app /data
+    chown -R bookmarkuser:bookmarkuser /app
 
 USER bookmarkuser
 
 # Expose port
 EXPOSE 5000
-
-# Set environment variables
-ENV FLASK_ENV=production
-ENV BOOKMARKS_PATH=/data/bookmarks.yaml
-ENV ICONS_PATH=/data/icons
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
