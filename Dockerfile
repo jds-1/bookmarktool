@@ -1,13 +1,11 @@
-# Use Python 3.11 slim image
-FROM python:3.13-slim
+# Use Alpine Linux for smaller image size
+FROM python:3.11-alpine
 
 # Set working directory
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 # Copy requirements first for better caching
 COPY requirements.txt .

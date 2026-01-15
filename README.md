@@ -1,13 +1,15 @@
 # Bookmark Manager
 
-A modern, web-based bookmark organizer built with Flask. This application allows you to manage your bookmarks in categories with a clean, responsive interface.
+A modern, web-based bookmark organizer built with Flask, designed for easier management of bookmarks in [Homepage](https://gethomepage.dev/). This application allows you to manage your bookmarks in categories with a clean, responsive interface and seamlessly integrates with Homepage's bookmark system.
 
 ## Features
 
+- **Homepage Integration**: Seamlessly works with [Homepage's](https://gethomepage.dev/) bookmark system
 - **Organized Categories**: Group bookmarks by category (Developer, Social, Entertainment, Shopping, etc.)
 - **Flexible Display**: Support for both icons and abbreviations for bookmarks
 - **CRUD Operations**: Add, edit, and delete bookmarks through a user-friendly interface
 - **YAML Storage**: Bookmarks are stored in a simple YAML format for easy backup and editing
+- **Icon Management**: Upload, browse, and manage bookmark icons with visual preview
 - **Responsive Design**: Works well on desktop and mobile devices
 - **Environment Configuration**: Configurable bookmark file location via environment variables
 
