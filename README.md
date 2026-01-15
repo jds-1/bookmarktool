@@ -11,6 +11,83 @@ A modern, web-based bookmark organizer built with Flask. This application allows
 - **Responsive Design**: Works well on desktop and mobile devices
 - **Environment Configuration**: Configurable bookmark file location via environment variables
 
+## Docker Deployment
+
+### Automated Builds
+
+This repository includes GitHub Actions that automatically build and push Docker images to GitHub Container Registry (ghcr.io) when:
+- Code is pushed to `main` branch
+- New version tags are created (e.g., `v1.0.0`)
+
+Images are available at: `ghcr.io/YOUR_USERNAME/bookmarktool:latest`
+
+### Prerequisites
+
+- Docker with Swarm mode enabled
+- Docker Compose (for development)
+
+### Production Deployment (Docker Swarm)
+
+1. **Update docker-stack.yml image reference:**
+```yaml
+# Replace OWNER/REPO with your GitHub username/repository name
+image: ghcr.io/YOUR_USERNAME/bookmarktool:latest
+```
+
+2. **Create data directory:**
+```bash
+sudo mkdir -p /opt/bookmark-data
+sudo chown 1000:1000 /opt/bookmark-data
+```
+
+3. **Deploy to swarm:**
+```bash
+docker stack deploy -c docker-stack.yml bookmark-stack
+```
+
+4. **Monitor deployment:**
+```bash
+# Check services
+docker stack services bookmark-stack
+
+# View logs  
+docker service logs bookmark-stack_bookmark-manager
+```
+
+### Building Locally (Alternative)
+
+If you prefer to build locally instead of using GitHub Container Registry:
+
+1. **Build the Docker image:**
+```bash
+docker build -t bookmark-manager .
+```
+
+2. **Update docker-stack.yml to use local image:**
+```yaml
+image: bookmark-manager:latest
+```
+
+### Development with Docker Compose
+
+```bash
+# Start development environment
+docker-compose up --build
+
+# Run in background
+docker-compose up -d --build
+```
+
+### Environment Variables
+
+Configure via environment or `.env` file (copy from `.env.example`):
+
+- `BOOKMARKS_PATH`: Path to bookmarks YAML file (default: `./bookmarks.yaml`)
+- `ICONS_PATH`: Path to icons directory (default: `icons/` in same directory as bookmarks)
+- `FLASK_HOST`: Server host (default: `0.0.0.0`)
+- `FLASK_PORT`: Server port (default: `5000`)
+- `FLASK_DEBUG`: Debug mode (default: `false`)
+
 ## Quick Start
 
 ### Prerequisites

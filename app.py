@@ -15,6 +15,11 @@ if not ICONS_DIR:
     bookmarks_dir = os.path.dirname(os.path.abspath(BOOKMARKS_FILE))
     ICONS_DIR = os.path.join(bookmarks_dir, 'icons')
 
+# Flask configuration from environment
+FLASK_HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
+FLASK_PORT = int(os.environ.get('FLASK_PORT', 5000))
+FLASK_DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+
 # Upload configuration
 UPLOAD_FOLDER = ICONS_DIR
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico'}
@@ -252,5 +257,7 @@ if __name__ == '__main__':
     print(f"Bookmark Manager starting...")
     print(f"Using bookmarks file: {BOOKMARKS_FILE}")
     print(f"Using icons directory: {ICONS_DIR}")
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    print(f"Server running on: {FLASK_HOST}:{FLASK_PORT}")
+    print(f"Debug mode: {FLASK_DEBUG}")
+    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=FLASK_DEBUG)
     #.

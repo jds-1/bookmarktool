@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  bookmark-manager:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - BOOKMARKS_PATH=/data/bookmarks.yaml
+      - ICONS_PATH=/data/icons
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+    volumes:
+      - ./data:/data
+      - ./app.py:/app/app.py
+      - ./templates:/app/templates
+    networks:
+      - bookmark-net
+
+networks:
+  bookmark-net:
+    driver: bridge
