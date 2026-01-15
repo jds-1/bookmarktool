@@ -81,14 +81,6 @@ def load_bookmarks():
                     'icon': '/icons/github.png',
                     'href': 'https://github.com/'
                 },
-                'PriceActionRepo': {
-                    'icon': '/icons/github.png',
-                    'href': 'https://github.com/jds-1/Redis_PriceAction'
-                },
-                'ArchitectureDrawing': {
-                    'icon': '/icons/drawing.png',
-                    'href': 'https://app.diagrams.net/#G1GcpJ8J_m65WpgOj4a9kpzTbrM235t9TI#%7B%22pageId%22%3A%220JnybtqUU6laDeuUlVwc%22%7D'
-                }
             },
             'Social': {
                 'Linkedin': {
@@ -106,16 +98,6 @@ def load_bookmarks():
                     'href': 'https://music.youtube.com/'
                 }
             },
-            'Shopping': {
-                'Amazon': {
-                    'abbr': 'AM',
-                    'href': 'https://www.amazon.co.uk/'
-                },
-                'Ebay': {
-                    'abbr': 'Eb',
-                    'href': 'https://www.ebay.co.uk/'
-                }
-            }
         }
         save_bookmarks(default_bookmarks)
         return default_bookmarks
