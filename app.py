@@ -98,71 +98,38 @@ def load_bookmarks():
         return default_bookmarks
     
     with open(BOOKMARKS_FILE, 'r') as file:
-        return yaml.safe_load(file) or {}
-
-def save_bookmarks(bookmarks):
-    """Save bookmarks to YAML file"""
-    with open(BOOKMARKS_FILE, 'w') as file:
-        yaml.dump(bookmarks, file, default_flow_style=False, sort_keys=False)
-
-@app.route('/')
-def index():
-    """Render the main page with bookmarks"""
-    bookmarks = load_bookmarks()
-    return render_template('index.html', bookmarks=bookmarks)
-
-@app.route('/add', methods=['POST'])
-def add_bookmark():
-    """Add a new bookmark"""
-    bookmarks = load_bookmarks()
-    
-    category = request.form.get('category')
-    name = request.form.get('name')
-    href = request.form.get('href')
-    icon = request.form.get('icon')
-    abbr = request.form.get('abbr')
-    
-    if not category or not name or not href:
-        return jsonify({'success': False, 'error': 'Category, name, and URL are required'})
-    
-    # Initialize category if it doesn't exist
-    if category not in bookmarks:
-        bookmarks[category] = {}
-    
-    # Create bookmark data
-    bookmark_data = {'href': href}
-    if icon:
-        bookmark_data['icon'] = icon
-    if abbr:
-        bookmark_data['abbr'] = abbr
-    
-    bookmarks[category][name] = bookmark_data
-    save_bookmarks(bookmarks)
-    
-    return jsonify({'success': True})
-
-@app.route('/delete', methods=['POST'])
-def delete_bookmark():
-    """Delete a bookmark"""
-    bookmarks = load_bookmarks()
-    
-    category = request.form.get('category')
-    name = request.form.get('name')
-    
-    if not category or not name:
-        return jsonify({'success': False, 'error': 'Category and name are required'})
-    
-    if category in bookmarks and name in bookmarks[category]:
-        del bookmarks[category][name]
+        data = yaml.safe_load(file) or {}
         
-        # Remove category if empty
-        if not bookmarks[category]:
-            del bookmarks[category]
-        
-        save_bookmarks(bookmarks)
-        return jsonify({'success': True})
-    
-    return jsonify({'success': False, 'error': 'Bookmark not found'})
+        # Handle different YAML formats
+        if isinstance(data, list):
+            # Convert Homepage nested list format to dictionary format
+            converted = {}
+            for category_item in data:
+                if isinstance(category_item, dict):
+                    for category_name, bookmarks_list in category_item.items():
+                        converted[category_name] = {}
+                        if isinstance(bookmarks_list, list):
+                            for bookmark_item in bookmarks_list:
+                                if isinstance(bookmark_item, dict):
+                                    for bookmark_name, properties_list in bookmark_item.items():
+                                        if isinstance(properties_list, list) and len(properties_list) > 0:
+                                            properties = properties_list[0]  # Get first (and only) properties dict
+                                            converted[category_name][bookmark_name] = {
+                                                'href': properties.get('href', ''),
+                                                'icon': properties.get('icon'),
+                                                'abbr': properties.get('abbr')
+                                            }
+                                            # Remove None values
+                                            converted[category_name][bookmark_name] = {
+                                                k: v for k, v in converted[category_name][bookmark_name].items() if v is not None
+                                            }
+            return converted
+        elif isinstance(data, dict):
+            # Already in correct format
+            return data
+        else:
+            # Fallback to empty dict
+            return {}
 
 @app.route('/edit', methods=['POST'])
 def edit_bookmark():
