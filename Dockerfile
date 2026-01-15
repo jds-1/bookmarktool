@@ -21,8 +21,8 @@ COPY bookmarks.yaml .
 # Create data directory for persistent storage
 RUN mkdir -p /data/icons
 
-# Create non-root user for security
-RUN useradd -m -u 1000 bookmarkuser && \
+# Create non-root user for security (Alpine style)
+RUN adduser -D -u 1000 bookmarkuser && \
     chown -R bookmarkuser:bookmarkuser /app /data
 
 USER bookmarkuser
