@@ -174,3 +174,9 @@ static/uploads/
 icons/
 temp/
 logs/
+
+services.yaml
+bookmarks.yaml
+widgets.yaml
+settings.yaml
+*.yaml.backup

@@ -108,17 +108,16 @@ def validate_services_format(data):
             
             service_name, service_data = next(iter(service.items()))
             
-            if not isinstance(service_data, list):
-                return f"Service '{service_name}' should contain a list of properties"
+            if not isinstance(service_data, dict):
+                return f"Service '{service_name}' should contain a dictionary of properties"
             
             # Validate service properties
-            for prop in service_data:
-                if not isinstance(prop, dict):
-                    return f"Properties for service '{service_name}' should be dictionaries"
-                
+            for prop_name, prop_value in service_data.items():
                 # Check for required properties like href
-                if 'href' in prop and not isinstance(prop['href'], str):
+                if prop_name == 'href' and not isinstance(prop_value, str):
                     return f"href in service '{service_name}' should be a string"
+                elif prop_name == 'widget' and not isinstance(prop_value, dict):
+                    return f"widget in service '{service_name}' should be a dictionary"
     
     return None
 
@@ -157,17 +156,18 @@ def validate_widgets_format(data):
         if not isinstance(widget, dict):
             return "Each widget should be a dictionary"
         
-        # Each widget should have a 'type' property
-        if 'type' not in widget:
-            return "Each widget must have a 'type' property"
+        # Each widget should have exactly one key (the widget type)
+        if len(widget.keys()) != 1:
+            return "Each widget should have exactly one key (widget type)"
         
-        widget_type = widget['type']
+        widget_type, widget_config = next(iter(widget.items()))
+        
         if not isinstance(widget_type, str):
-            return "Widget 'type' should be a string"
+            return "Widget type should be a string"
         
-        # Validate common widget properties
-        if 'options' in widget and not isinstance(widget['options'], dict):
-            return f"Widget options for '{widget_type}' should be a dictionary"
+        # Widget configuration can be a dictionary or None/empty
+        if widget_config is not None and not isinstance(widget_config, dict):
+            return f"Widget configuration for '{widget_type}' should be a dictionary or null"
     
     return None
 

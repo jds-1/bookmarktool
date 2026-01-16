@@ -1362,7 +1362,7 @@
                                     hasValidStructure = true;
                                 }
                             } else if (currentConfigFile === 'services.yaml') {
-                                // Services: Similar nested format (- Group:)
+                                // Services: Nested format (- Group: - Service: key: value)
                                 if (line.match(/^-\s+[\w\s]+:$/) || line.match(/^\s+href:\s*https?:/)) {
                                     hasValidStructure = true;
                                 }
@@ -1390,16 +1390,16 @@
                         let expectedFormat = '';
                         switch (currentConfigFile) {
                             case 'bookmarks.yaml':
-                                expectedFormat = 'Expected nested list format like:\n- CategoryName:\n    - BookmarkName:\n        - href: https://example.com';
+                                expectedFormat = 'Expected nested format like:\n- CategoryName:\n    - BookmarkName:\n        - href: https://example.com';
                                 break;
                             case 'services.yaml':
-                                expectedFormat = 'Expected nested list format like:\n- GroupName:\n    - ServiceName:\n        href: https://example.com';
+                                expectedFormat = 'Expected nested format like:\n- GroupName:\n    - ServiceName:\n        href: https://example.com';
                                 break;
                             case 'settings.yaml':
                                 expectedFormat = 'Expected key-value pairs like:\ntitle: My Homepage\ntheme: dark\nlanguage: en';
                                 break;
                             case 'widgets.yaml':
-                                expectedFormat = 'Expected widget array like:\n- type: datetime\n- type: resources';
+                                expectedFormat = 'Expected widget format like:\n- type: datetime\n- type: resources';
                                 break;
                         }
                         showConfigStatus(`⚠️ Warning: File doesn't match expected ${currentConfigFile} format.\n${expectedFormat}`, false);
