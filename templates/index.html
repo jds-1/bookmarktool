@@ -77,6 +77,47 @@
         .bookmark-item:hover {
             background: #e9ecef;
         }
+
+        /* Drag and Drop Styles */
+        .bookmark-item {
+            cursor: move;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .bookmark-item.dragging {
+            opacity: 0.7;
+            transform: rotate(3deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            position: relative;
+        }
+
+        .bookmark-item.drag-over {
+            border: 2px dashed #667eea;
+            background: #f0f4ff;
+        }
+
+        .category.drag-over {
+            background: #f0f4ff;
+            border: 2px dashed #667eea;
+        }
+
+        .drag-placeholder {
+            height: 4px;
+            background: #667eea;
+            margin: 8px 0;
+            border-radius: 2px;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+        }
+
+        .bookmark-item:not(.dragging) {
+            transition: transform 0.2s ease;
+        }
+
+        .bookmark-item:not(.dragging):hover {
+            transform: translateY(-2px);
+        }
         
         .bookmark-link {
             display: flex;
@@ -706,11 +747,13 @@
         
         <div class="bookmarks-grid">
             {% for category, items in bookmarks.items() %}
-            <div class="category">
+            <div class="category" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" 
+                 ondragleave="handleDragLeave(event)">
                 <h2>{{ category }}</h2>
                 <ul class="bookmark-list">
                     {% for name, data in items.items() %}
-                    <li class="bookmark-item" data-category="{{ category }}" data-name="{{ name }}">
+                    <li class="bookmark-item" data-category="{{ category }}" data-name="{{ name }}" 
+                        draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
                         <a href="{{ data.href }}" target="_blank" class="bookmark-link">
                             <div class="bookmark-icon">
                                 {% if data.icon %}
@@ -725,6 +768,7 @@
                                 <div class="bookmark-name">{{ name }}</div>
                                 <div class="bookmark-url">{{ data.href }}</div>
                             </div>
+                            <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
                         </a>
                         <div class="actions">
                             <button class="btn btn-edit" onclick="editBookmark('{{ category }}', '{{ name }}')">
@@ -849,6 +893,157 @@
     <div id="notification" class="notification"></div>
     
     <script>
+        // Drag and Drop Variables
+        let draggedElement = null;
+        let draggedData = null;
+        let placeholder = null;
+
+        // Drag and Drop Functions
+        function handleDragStart(event) {
+            draggedElement = event.currentTarget;
+            console.log("Dragged element:", draggedElement, "Category:", draggedElement?.getAttribute("data-category"), "Name:", draggedElement?.getAttribute("data-name"));
+            draggedData = {
+                category: draggedElement.getAttribute('data-category'),
+                name: draggedElement.getAttribute('data-name')
+            };
+            
+            draggedElement.classList.add('dragging');
+            
+            // Create placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'drag-placeholder';
+            
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/html', draggedElement.outerHTML);
+        }
+
+        function handleDragEnd(event) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+            }
+            
+            // Clean up placeholder
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
+            
+            // Remove drag-over class from all elements
+            document.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
+            draggedData = null;
+            placeholder = null;
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            
+            if (!draggedElement) return;
+            
+            const category = event.currentTarget;
+            const bookmarkList = category.querySelector('.bookmark-list');
+            
+            if (!bookmarkList) return;
+            
+            // Get the element being dragged over
+            const afterElement = getDragAfterElement(bookmarkList, event.clientY);
+            
+            if (afterElement == null) {
+                bookmarkList.appendChild(placeholder);
+            } else {
+                bookmarkList.insertBefore(placeholder, afterElement);
+            }
+            
+            category.classList.add('drag-over');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            
+            if (!draggedElement || !draggedData) return;
+            
+            const targetCategory = event.currentTarget;
+            const targetCategoryName = targetCategory.querySelector('h2').textContent;
+            const bookmarkList = targetCategory.querySelector('.bookmark-list');
+            
+            if (!bookmarkList) return;
+            
+            // Find the position to insert
+            let targetPosition = 0;
+            const placeholderIndex = Array.from(bookmarkList.children).indexOf(placeholder);
+            
+            if (placeholderIndex !== -1) {
+                targetPosition = placeholderIndex;
+            }
+            
+            // Calculate new position excluding the dragged element if it's in the same category
+            if (draggedData.category === targetCategoryName) {
+                const currentIndex = Array.from(bookmarkList.children).indexOf(draggedElement);
+                if (currentIndex < targetPosition) {
+                    targetPosition--; // Adjust for removal of current element
+                }
+            }
+            
+            // Call reorder API
+            reorderBookmark(draggedData.category, draggedData.name, targetCategoryName, targetPosition);
+            
+            // Clean up
+            targetCategory.classList.remove('drag-over');
+        }
+
+        function handleDragLeave(event) {
+            // Only remove drag-over if we're actually leaving the category
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+                event.currentTarget.classList.remove('drag-over');
+            }
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.bookmark-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Reorder bookmark API call
+        async function reorderBookmark(sourceCategory, bookmarkName, targetCategory, position) {
+            const formData = new FormData();
+            formData.append('source_category', sourceCategory);
+            formData.append('bookmark_name', bookmarkName);
+            formData.append('target_category', targetCategory);
+            formData.append('position', position);
+            
+            try {
+                const response = await fetch('/reorder', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Bookmark reordered successfully!');
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showNotification(data.error || 'Error reordering bookmark', true);
+                    location.reload(); // Reload to reset positions on error
+                }
+            } catch (error) {
+                showNotification('Error reordering bookmark', true);
+                location.reload(); // Reload to reset positions on error
+            }
+        }
+
         // Handle category selection
         function handleCategorySelect() {
             const select = document.getElementById('categorySelect');

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, jsonify, url_for, send_from_directory
+from collections import OrderedDict
 
 # Get bookmarks file path from environment variable with default
 BOOKMARKS_FILE = os.environ.get('BOOKMARKS_PATH', './bookmarks.yaml')
@@ -171,7 +172,7 @@ def validate_widgets_format(data):
     return None
 
 def save_bookmarks(bookmarks):
-    """Save bookmarks to YAML file in Homepage format"""
+    """Save bookmarks to YAML file in Homepage format preserving order"""
     global BOOKMARKS_FILE
     
     # Convert dictionary format back to Homepage nested list format
@@ -180,6 +181,8 @@ def save_bookmarks(bookmarks):
     for category_name, bookmarks_dict in bookmarks.items():
         if bookmarks_dict:  # Only add categories that have bookmarks
             category_bookmarks = []
+            
+            # Preserve order if bookmarks_dict is an OrderedDict or regular dict (Python 3.7+)
             for bookmark_name, properties in bookmarks_dict.items():
                 # Create the nested list structure expected by Homepage
                 bookmark_entry = {bookmark_name: [properties]}
@@ -189,7 +192,7 @@ def save_bookmarks(bookmarks):
             category_entry = {category_name: category_bookmarks}
             homepage_format.append(category_entry)
     
-    # Write to file
+    # Write to file preserving order
     with open(BOOKMARKS_FILE, 'w') as file:
         yaml.dump(homepage_format, file, default_flow_style=False, sort_keys=False)
 
@@ -230,30 +233,30 @@ def load_bookmarks():
     
     if not os.path.exists(BOOKMARKS_FILE):
         # Create default structure if file doesn't exist
-        default_bookmarks = {
-            'Developer': {
-                'Github': {
+        default_bookmarks = OrderedDict([
+            ('Developer', OrderedDict([
+                ('Github', {
                     'icon': '/icons/github.png',
                     'href': 'https://github.com/'
-                },
-            },
-            'Social': {
-                'Linkedin': {
+                })
+            ])),
+            ('Social', OrderedDict([
+                ('Linkedin', {
                     'abbr': 'LI',
                     'href': 'https://www.linkedin.com/feed/'
-                },
-                'Facebook': {
+                }),
+                ('Facebook', {
                     'abbr': 'FB',
                     'href': 'https://www.facebook.com/'
-                }
-            },
-            'Entertainment': {
-                'YouTube': {
+                })
+            ])),
+            ('Entertainment', OrderedDict([
+                ('YouTube', {
                     'abbr': 'YT',
                     'href': 'https://music.youtube.com/'
-                }
-            },
-        }
+                })
+            ]))
+        ])
         save_bookmarks(default_bookmarks)
         return default_bookmarks
     
@@ -263,11 +266,11 @@ def load_bookmarks():
         # Handle different YAML formats
         if isinstance(data, list):
             # Convert Homepage nested list format to dictionary format
-            converted = {}
+            converted = OrderedDict()
             for category_item in data:
                 if isinstance(category_item, dict):
                     for category_name, bookmarks_list in category_item.items():
-                        converted[category_name] = {}
+                        converted[category_name] = OrderedDict()
                         if isinstance(bookmarks_list, list):
                             for bookmark_item in bookmarks_list:
                                 if isinstance(bookmark_item, dict):
@@ -285,11 +288,14 @@ def load_bookmarks():
                                             }
             return converted
         elif isinstance(data, dict):
-            # Already in correct format
-            return data
+            # Already in correct format, convert to OrderedDict to preserve order
+            converted = OrderedDict()
+            for category_name, bookmarks_dict in data.items():
+                converted[category_name] = OrderedDict(bookmarks_dict)
+            return converted
         else:
-            # Fallback to empty dict
-            return {}
+            # Fallback to empty OrderedDict
+            return OrderedDict()
 
 @app.route('/edit', methods=['POST'])
 def edit_bookmark():
@@ -320,7 +326,7 @@ def edit_bookmark():
     
     # Create new category if needed
     if new_category not in bookmarks:
-        bookmarks[new_category] = {}
+        bookmarks[new_category] = OrderedDict()
     
     # Create updated bookmark data
     bookmark_data = {'href': href or bookmarks.get(old_category, {}).get(old_name, {}).get('href', '')}
@@ -483,7 +489,7 @@ def add_bookmark():
     
     # Create category if it doesn't exist
     if category not in bookmarks:
-        bookmarks[category] = {}
+        bookmarks[category] = OrderedDict()
     
     # Check if bookmark already exists
     if name in bookmarks[category]:
@@ -497,6 +503,66 @@ def add_bookmark():
         bookmark_data['abbr'] = abbr
     
     bookmarks[category][name] = bookmark_data
+    save_bookmarks(bookmarks)
+    
+    return jsonify({'success': True})
+
+@app.route('/reorder', methods=['POST'])
+def reorder_bookmark():
+    """Reorder a bookmark within the same category or move it to a different category"""
+    bookmarks = load_bookmarks()
+    
+    source_category = request.form.get('source_category')
+    bookmark_name = request.form.get('bookmark_name')
+    target_category = request.form.get('target_category')
+    position = request.form.get('position')
+    
+    # Debug logging
+    print(f"DEBUG: Reorder request - source_category: '{source_category}', bookmark_name: '{bookmark_name}', target_category: '{target_category}', position: '{position}'")
+    print(f"DEBUG: Available bookmarks: {list(bookmarks.keys())}")
+    if source_category in bookmarks:
+        print(f"DEBUG: Bookmarks in '{source_category}': {list(bookmarks[source_category].keys())}")
+    
+    if not source_category or not bookmark_name or not target_category or position is None:
+        return jsonify({'success': False, 'error': 'Missing required parameters'})
+    
+    try:
+        position = int(position)
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid position value'})
+    
+    # Check if bookmark exists in source category
+    if source_category not in bookmarks or bookmark_name not in bookmarks[source_category]:
+        error_msg = f'Bookmark "{bookmark_name}" not found in category "{source_category}"'
+        print(f"DEBUG: {error_msg}")
+        return jsonify({'success': False, 'error': error_msg})
+    
+    # Get the bookmark data
+    bookmark_data = bookmarks[source_category][bookmark_name]
+    
+    # Remove from source category
+    del bookmarks[source_category][bookmark_name]
+    
+    # Remove source category if it's empty
+    if not bookmarks[source_category]:
+        del bookmarks[source_category]
+    
+    # Create target category if it doesn't exist
+    if target_category not in bookmarks:
+        bookmarks[target_category] = OrderedDict()
+    
+    # Convert target category to ordered list to handle positioning
+    target_items = list(bookmarks[target_category].items())
+    
+    # Insert at specified position
+    if position >= len(target_items):
+        target_items.append((bookmark_name, bookmark_data))
+    else:
+        target_items.insert(position, (bookmark_name, bookmark_data))
+    
+    # Convert back to OrderedDict with preserved order
+    bookmarks[target_category] = OrderedDict(target_items)
+    
     save_bookmarks(bookmarks)
     
     return jsonify({'success': True})
