@@ -901,7 +901,6 @@
         // Drag and Drop Functions
         function handleDragStart(event) {
             draggedElement = event.currentTarget;
-            console.log("Dragged element:", draggedElement, "Category:", draggedElement?.getAttribute("data-category"), "Name:", draggedElement?.getAttribute("data-name"));
             draggedData = {
                 category: draggedElement.getAttribute('data-category'),
                 name: draggedElement.getAttribute('data-name')

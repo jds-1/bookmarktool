@@ -517,12 +517,6 @@ def reorder_bookmark():
     target_category = request.form.get('target_category')
     position = request.form.get('position')
     
-    # Debug logging
-    print(f"DEBUG: Reorder request - source_category: '{source_category}', bookmark_name: '{bookmark_name}', target_category: '{target_category}', position: '{position}'")
-    print(f"DEBUG: Available bookmarks: {list(bookmarks.keys())}")
-    if source_category in bookmarks:
-        print(f"DEBUG: Bookmarks in '{source_category}': {list(bookmarks[source_category].keys())}")
-    
     if not source_category or not bookmark_name or not target_category or position is None:
         return jsonify({'success': False, 'error': 'Missing required parameters'})
     
@@ -533,9 +527,7 @@ def reorder_bookmark():
     
     # Check if bookmark exists in source category
     if source_category not in bookmarks or bookmark_name not in bookmarks[source_category]:
-        error_msg = f'Bookmark "{bookmark_name}" not found in category "{source_category}"'
-        print(f"DEBUG: {error_msg}")
-        return jsonify({'success': False, 'error': error_msg})
+        return jsonify({'success': False, 'error': 'Bookmark not found'})
     
     # Get the bookmark data
     bookmark_data = bookmarks[source_category][bookmark_name]

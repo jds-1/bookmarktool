@@ -1,6 +1,6 @@
 # Homepage Bookmark Manager
 
-A modern, web-based bookmark organizer built with Flask, designed for easier management of bookmarks in [Homepage](https://gethomepage.dev/). This application allows you to manage your bookmarks in categories with a clean, responsive interface and seamlessly integrates with Homepage's bookmark system.
+A modern, web-based bookmark organizer built with Flask, designed for easier management of bookmarks in [Homepage](https://gethomepage.dev/). This application allows you to manage your bookmarks in categories with a clean, responsive interface, drag-and-drop reordering, and seamlessly integrates with Homepage's bookmark system.
 
 ## Screenshots
 
@@ -31,6 +31,7 @@ A modern, web-based bookmark organizer built with Flask, designed for easier man
 ## Features
 
 - **Homepage Integration**: Seamlessly works with [Homepage's](https://gethomepage.dev/) bookmark system
+- **Drag & Drop Reordering**: Intuitive drag and drop interface to reorder bookmarks within categories or move between categories
 - **Multi-Config Editor**: Edit bookmarks.yaml, services.yaml, settings.yaml, and widgets.yaml files
 - **Homepage Format Validation**: Built-in validation ensures proper Homepage YAML syntax
 - **Organized Categories**: Group bookmarks by category (Developer, Social, Entertainment, Shopping, etc.)
@@ -150,7 +151,7 @@ pip install -r requirements.txt
 python3 app.py
 ```
 
-5. Open your browser and navigate to `http://localhost:5000`
+5. Open your browser and navigate to `http://localhost:5000`\n\n## Usage\n\n### Managing Bookmarks\n\n- **Add Bookmarks**: Use the form at the top of the page to add new bookmarks with name, URL, category, and optional icon/abbreviation\n- **Edit Bookmarks**: Click the \"Edit\" button on any bookmark to modify its details\n- **Delete Bookmarks**: Click the \"Delete\" button to remove unwanted bookmarks\n\n### Drag & Drop Reordering\n\n- **Reorder within category**: Drag any bookmark up or down within its current category to change the order\n- **Move between categories**: Drag a bookmark from one category and drop it into another category\n- **Visual feedback**: Dragged items show visual indicators, and drop zones highlight when hovering\n- **Auto-save**: Changes are automatically saved and the page refreshes to show the new order\n\n### Icon Management\n\n- **Upload icons**: Use the file upload area to add new icon files\n- **Browse icons**: Click \"Browse Uploaded Icons\" to select from previously uploaded icons\n- **Icon formats**: Supports PNG, JPG, JPEG, GIF, SVG, and ICO files\n- **Abbreviations**: Use 2-4 character abbreviations as an alternative to icons
 
 ## Configuration
 
