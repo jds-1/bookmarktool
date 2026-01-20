@@ -196,6 +196,40 @@ def save_bookmarks(bookmarks):
     with open(BOOKMARKS_FILE, 'w') as file:
         yaml.dump(homepage_format, file, default_flow_style=False, sort_keys=False)
 
+def load_settings():
+    """Load settings from settings.yaml file"""
+    settings_file = os.path.join(os.path.dirname(os.path.abspath(BOOKMARKS_FILE)), 'settings.yaml')
+    
+    # Default settings matching homepage style
+    default_settings = {
+        'title': 'My Landing Page',
+        'background': {
+            'image': 'https://images.unsplash.com/photo-1502790671504-542ad42d5189?auto=format&fit=crop&w=2560&q=80',
+            'saturate': 50,
+            'brightness': 75,
+            'opacity': 95
+        }
+    }
+    
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, 'r') as f:
+                settings = yaml.safe_load(f) or {}
+                # Merge with defaults to ensure all required keys exist
+                for key, value in default_settings.items():
+                    if key not in settings:
+                        settings[key] = value
+                    elif isinstance(value, dict) and isinstance(settings.get(key), dict):
+                        # Merge nested dictionaries
+                        for nested_key, nested_value in value.items():
+                            if nested_key not in settings[key]:
+                                settings[key][nested_key] = nested_value
+                return settings
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+    
+    return default_settings
+
 # Flask configuration from environment
 FLASK_HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
 FLASK_PORT = int(os.environ.get('FLASK_PORT', 5000))
@@ -471,7 +505,8 @@ def save_config():
 def index():
     """Main page showing all bookmarks"""
     bookmarks = load_bookmarks()
-    return render_template('index.html', bookmarks=bookmarks)
+    settings = load_settings()
+    return render_template('index.html', bookmarks=bookmarks, settings=settings)
 
 @app.route('/add', methods=['POST'])
 def add_bookmark():
